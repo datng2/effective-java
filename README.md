@@ -20,81 +20,56 @@ Pros:
 
 ### Item 2: Consider a Builder when faced with many constructor params
 
-* Bad:
+* Simplify constructor
+* Provide clean code.
+
+### Item 3: Enforce the Singleton property with a private constructor or an enum type
+
+* Make clear that the class is a singleton
+* Provide flexibility to change its API later. ? (Item 27)
+
+### Item 4: Enforce noninstaniability via private constructor
+
+* Some utilitiy classes were not designed to **be instaniated**. (e.g. `java.util.Collections`).
+* However, these can be subclassed and the subcleass instaniated --> potentially mislead user into thinkings that class was designed for inheritance.
+* **Simple Idiom** to ensure noninstantiability - **Private Constructor**
 
 ```java
-
-// Client code:
-/// NutritionFacts cocaCola = new NutritionFacts(240, 8, 100, 0, 35, 27);
-
-public class NutritionFacts { 
-    private final int servingSize; 
-    private final int servings; 
-    private final int calories; 
-    private final int fat;
-    private final int sodium;
-    private final int carbohydrate;
-
-    public NutritionFacts(int servingSize, int servings, int calories, int fat, int sodium, int carbohydrate) {
-        this.servingSize  = servingSize;
-        ....
-    }
-    public NutritionFacts(int servingSize, int servings) {
-            this(servingSize, servings, 0);}
-    public NutritionFacts(int servingSize, int servings, int calories) {
-        this(servingSize, servings, calories, 0);
-    }
-    ...
+public class UtilityClass {
+    // Suppress default constructor for noninstaniability
+    private UtilityClass() { throw new AssertionError();}
 }
 ```
 
-* Builder pattern
+### Item 5: Avoid creating unncessary objects
 
+* It is *appropriate* to resuse a single object instead of creating a new functionally equilvalent object each time is needed.
+* Reuse can be both faster and more stylish.
+* An object can be reused if it is **immutable**.
+
+
+### Item 6 : Eliminate obsolete object references
+
+* To avoid memory leak.
 ```java
-// Client code:
-//     NutritionFacts cocaCola = new NutritionFacts.Builder(240, 8)
-//                                                 .calories(100)
-//                                                 .sodium(35)
-//                                                 .carbohydrate(27)
-//                                                 .build();
-// Builder Pattern
-public class NutritionFacts {
-    private final int servingSize;
-    private final int servings;
-    private final int calories;
-    private final int fat;
-    private final int sodium;
-    private final int carbohydrate;
-    public static class Builder {
-        // Required parameters
-        private final int servingSize;
-        private final int servings;
-        // Optional parameters - initialized to default values
-        private int calories      = 0;
-        private int fat           = 0;
-        private int carbohydrate  = 0;
-        private int sodium        = 0;
-        public Builder(int servingSize, int servings) {
-            this.servingSize = servingSize;
-            this.servings    = servings;
-        }
-        public Builder calories(int val)
-            { calories = val;      return this; }
-        public Builder fat(int val)
-            { fat = val;           return this; }
-        public Builder carbohydrate(int val)
-            { carbohydrate = val;  return this; }
-        public Builder sodium(int val)
-            { sodium = val;        return this; }
-        public NutritionFacts build() {
-            return new NutritionFacts(this);
-} }
-    private NutritionFacts(Builder builder) {
-        servingSize  = builder.servingSize;
-} }
+public class Stack {
+    private Object[] elements;
+    private int size;
+
+    public void push(Object e) {
+        elements[size++] = e;
+    }
+
+    public Object pop() {
+        // return elements[--size];   // <---- leak here due to osolete references.
+        // Better solution - null out array
+        Object result = elements[--size];
+        elements[size] = null;  // Avoid obsolete reference
+        return result;
+    }
+    
+    //...
+}
 ```
 
-
-### Item 3: Enforce the Singleton propety with a private constructor or an enum type
-
-Singleton: a class that instani
+* `Obsolete reference` is a reference that will never be dereferenced again.
